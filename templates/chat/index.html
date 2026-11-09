@@ -1,0 +1,234 @@
+{% extends "base.html" %}
+
+{% block title %}{% if active_conversation %}{{ active_conversation.title }} | {% endif %}TechHelp IA Console{% endblock %}
+
+{% block content %}
+<div class="flex-1 flex overflow-hidden relative">
+
+    <!-- Sidebar de Conversaciones / Historial de Tickets -->
+    <aside id="chat-sidebar" class="w-80 bg-slate-950 border-r border-slate-800/80 flex flex-col shrink-0 absolute inset-y-0 left-0 z-30 transform -translate-x-full md:relative md:translate-x-0 transition-transform duration-200 ease-in-out">
+        <!-- Botón Nueva Incidencia -->
+        <div class="p-4 border-b border-slate-800/80">
+            <button id="new-chat-btn" class="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-md shadow-indigo-600/20 transition">
+                <i class="fa-solid fa-plus text-xs"></i> Nueva Incidencia Técnica
+            </button>
+        </div>
+
+        <!-- Lista de Conversaciones Anteriores -->
+        <div class="flex-1 overflow-y-auto p-3 space-y-1">
+            <div class="px-3 py-1.5 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                Historial de Casos
+            </div>
+            {% if conversations %}
+                {% for conv in conversations %}
+                    <div class="conv-item group relative flex items-center justify-between rounded-xl p-2.5 text-xs transition cursor-pointer {% if active_conversation and active_conversation.id == conv.id %}bg-slate-800 text-white font-medium{% else %}text-slate-400 hover:bg-slate-900 hover:text-slate-200{% endif %}"
+                         data-id="{{ conv.id }}"
+                         onclick="window.location.href='{{ url_for('chat.chat_conversation_view', conv_id=conv.id) }}'">
+                        <div class="flex items-center gap-2.5 truncate mr-2">
+                            <i class="fa-regular fa-message {% if active_conversation and active_conversation.id == conv.id %}text-indigo-400{% else %}text-slate-600{% endif %}"></i>
+                            <span class="conv-title truncate">{{ conv.title }}</span>
+                        </div>
+                        <button class="delete-conv-btn opacity-0 group-hover:opacity-100 p-1 text-slate-500 hover:text-rose-400 rounded transition"
+                                data-id="{{ conv.id }}" title="Eliminar conversación">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="p-4 text-center text-xs text-slate-500">
+                    No tienes incidencias registradas aún. ¡Escribe tu primera consulta!
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Estado del Plan del Usuario en Sidebar -->
+        <div class="p-4 border-t border-slate-800/80 bg-slate-900/40">
+            <div class="flex items-center justify-between mb-2">
+                <span class="text-xs text-slate-400 font-medium">Uso diario</span>
+                {% if current_user.is_pro() %}
+                    <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                        ⚡ PRO ILIMITADO
+                    </span>
+                {% else %}
+                    <span id="daily-queries-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-400 border border-indigo-500/30">
+                        {{ limit_msg }}
+                    </span>
+                {% endif %}
+            </div>
+            {% if not current_user.is_pro() %}
+                <a href="{{ url_for('billing.pricing') }}" class="w-full flex items-center justify-center gap-1.5 py-1.5 rounded-lg bg-gradient-to-r from-indigo-600 to-emerald-500 text-white text-[11px] font-semibold hover:opacity-90 transition shadow">
+                    <i class="fa-solid fa-bolt text-amber-300"></i> Desbloquear Pro Ilimitado
+                </a>
+            {% endif %}
+        </div>
+    </aside>
+
+    <!-- Área de Chat Principal -->
+    <main class="flex-1 flex flex-col min-w-0 bg-slate-950">
+        <!-- Top Bar de la Conversación -->
+        <div class="h-14 border-b border-slate-800/80 px-4 flex items-center justify-between shrink-0 bg-slate-950/60 backdrop-blur">
+            <div class="flex items-center gap-3">
+                <button id="sidebar-toggle" class="md:hidden p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
+                <div>
+                    <h2 id="active-conversation-title" class="text-sm font-bold text-white truncate max-w-xs sm:max-w-md">
+                        {{ active_conversation.title if active_conversation else "Nueva Incidencia Técnica" }}
+                    </h2>
+                    <div class="flex items-center gap-2 text-[11px] text-slate-400">
+                        <span class="flex h-1.5 w-1.5 rounded-full bg-emerald-400"></span>
+                        <span>Ingeniero de Soporte Nivel 3 IA</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                {% if not current_user.is_pro() %}
+                    <a href="{{ url_for('billing.pricing') }}" class="hidden sm:inline-flex items-center gap-1 px-3 py-1 rounded-lg bg-indigo-600/20 border border-indigo-500/30 text-indigo-300 text-xs font-semibold hover:bg-indigo-600/30 transition">
+                        <i class="fa-solid fa-bolt text-amber-400"></i> Pasar a Pro
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Sugerencias de Consultas Rápidas -->
+        <div class="px-4 py-2 border-b border-slate-900 bg-slate-900/30 overflow-x-auto whitespace-nowrap scrollbar-none flex items-center gap-2 text-xs">
+            <span class="text-slate-500 text-[11px] font-medium mr-1"><i class="fa-regular fa-lightbulb"></i> Consultas rápidas:</span>
+            <button class="suggestion-chip px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300 hover:border-indigo-500 hover:text-white transition"
+                    data-prompt="Tengo pantalla azul en Windows 11 con código CRITICAL_PROCESS_DIED. ¿Cómo reparo los archivos del sistema?">
+                💻 Pantalla Azul (BSOD)
+            </button>
+            <button class="suggestion-chip px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300 hover:border-indigo-500 hover:text-white transition"
+                    data-prompt="No tengo acceso a internet, dice fallo de resolución DNS o red no identificada. ¿Qué comandos ejecuto?">
+                🌐 Error DNS / Conexión Wi-Fi
+            </button>
+            <button class="suggestion-chip px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300 hover:border-indigo-500 hover:text-white transition"
+                    data-prompt="Mi ordenador va extremadamente lento y el disco marca 100% de uso. ¿Cómo optimizarlo?">
+                ⚡ PC Lenta / Disco al 100%
+            </button>
+            <button class="suggestion-chip px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300 hover:border-indigo-500 hover:text-white transition"
+                    data-prompt="Los documentos se quedan atascados en la cola de impresión y no puedo eliminarlos.">
+                🖨️ Cola de Impresión Bloqueada
+            </button>
+            <button class="suggestion-chip px-3 py-1 rounded-full bg-slate-900 border border-slate-800 text-slate-300 hover:border-indigo-500 hover:text-white transition"
+                    data-prompt="¿Cómo reinicio un servicio en Linux systemd y reviso los logs con journalctl?">
+                🐧 Soporte Linux / SSH
+            </button>
+        </div>
+
+        <!-- Contenedor de Mensajes -->
+        <div id="chat-messages-container"
+             class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4"
+             data-conv-id="{{ active_conversation.id if active_conversation else '' }}">
+
+            {% if active_conversation and active_conversation.messages %}
+                {% for msg in active_conversation.messages %}
+                    {% if msg.sender == 'user' %}
+                        <!-- Burbuja Usuario -->
+                        <div class="flex justify-end gap-3 mb-6 animate-fade-in">
+                            <div class="max-w-[85%] md:max-w-[75%] rounded-2xl bg-indigo-600 text-white px-4 py-3 shadow-md shadow-indigo-600/20 text-sm">
+                                <p class="whitespace-pre-wrap">{{ msg.content }}</p>
+                                <span class="text-[10px] text-indigo-200 mt-1 block text-right">{{ msg.created_at.strftime('%H:%M') }}</span>
+                            </div>
+                            <div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-xs text-indigo-400 font-bold shrink-0">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                        </div>
+                    {% else %}
+                        <!-- Burbuja Asistente IA -->
+                        <div class="flex justify-start gap-3 mb-6 animate-fade-in">
+                            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-emerald-400 p-0.5 shrink-0 shadow-lg shadow-indigo-500/20">
+                                <div class="w-full h-full bg-slate-950 rounded-full flex items-center justify-center">
+                                    <i class="fa-solid fa-microchip text-emerald-400 text-xs"></i>
+                                </div>
+                            </div>
+                            <div class="max-w-[90%] md:max-w-[80%] rounded-2xl bg-slate-900 border border-slate-800 text-slate-100 px-5 py-4 shadow-xl prose-techhelp">
+                                <div class="ai-content-raw">{{ msg.content }}</div>
+                                <span class="text-[10px] text-slate-500 mt-2 block">{{ msg.created_at.strftime('%H:%M') }} • TechHelp IA</span>
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <!-- Mensaje de Bienvenida Inicial en Incidencia Vacía -->
+                <div class="py-12 text-center max-w-xl mx-auto space-y-4">
+                    <div class="w-16 h-16 rounded-2xl bg-gradient-to-tr from-indigo-600 to-emerald-400 p-0.5 mx-auto shadow-2xl shadow-indigo-500/30">
+                        <div class="w-full h-full bg-slate-950 rounded-[14px] flex items-center justify-center">
+                            <i class="fa-solid fa-screwdriver-wrench text-2xl text-emerald-400"></i>
+                        </div>
+                    </div>
+                    <h3 class="text-xl font-bold text-white">¿Qué incidencia técnica deseas resolver hoy?</h3>
+                    <p class="text-xs sm:text-sm text-slate-400">
+                        Escribe el síntoma del fallo, el código de error o el sistema que estás usando. Te daré el diagnóstico y los comandos paso a paso.
+                    </p>
+                </div>
+            {% endif %}
+
+            <!-- Indicador de "Escribiendo..." -->
+            <div id="typing-indicator" class="hidden flex items-center gap-3 animate-pulse">
+                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-indigo-600 to-emerald-400 p-0.5 shrink-0">
+                    <div class="w-full h-full bg-slate-950 rounded-full flex items-center justify-center">
+                        <i class="fa-solid fa-microchip text-emerald-400 text-xs"></i>
+                    </div>
+                </div>
+                <div class="bg-slate-900 border border-slate-800 rounded-2xl px-4 py-3 text-xs text-slate-400 flex items-center gap-2">
+                    <i class="fa-solid fa-circle-notch fa-spin text-indigo-400"></i>
+                    <span>Analizando incidencia técnica y generando solución...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input Bar Inferior -->
+        <div class="p-4 border-t border-slate-800/80 bg-slate-950/80">
+            {% if active_conversation %}
+                <form id="chat-form" class="max-w-4xl mx-auto flex items-end gap-3">
+                    <div class="flex-1 bg-slate-900 border border-slate-800 rounded-2xl p-2.5 focus-within:border-indigo-500 transition shadow-lg">
+                        <textarea id="message-input" rows="1"
+                                  class="w-full bg-transparent text-slate-100 placeholder-slate-500 text-sm focus:outline-none resize-none px-2 max-h-36"
+                                  placeholder="Describe la incidencia, fallo o pega el comando/error aquí... (Enter para enviar)"></textarea>
+                    </div>
+                    <button type="submit" id="send-btn"
+                            class="h-11 w-11 rounded-2xl bg-indigo-600 hover:bg-indigo-500 disabled:opacity-40 text-white flex items-center justify-center shrink-0 shadow-lg shadow-indigo-600/30 transition">
+                        <i class="fa-solid fa-paper-plane text-sm"></i>
+                    </button>
+                </form>
+            {% else %}
+                <div class="text-center py-2">
+                    <button onclick="document.getElementById('new-chat-btn').click()"
+                            class="px-6 py-2.5 rounded-xl bg-indigo-600 text-white font-semibold text-xs shadow hover:bg-indigo-500 transition">
+                        Comenzar Nueva Incidencia
+                    </button>
+                </div>
+            {% endif %}
+            <p class="text-[11px] text-center text-slate-500 mt-2">
+                TechHelp IA proporciona soluciones verificadas. Aplica comandos con privilegios de administrador con precaución.
+            </p>
+        </div>
+    </main>
+</div>
+
+<!-- Modal de Límite Diario Alcanzado -->
+<div id="limit-warning-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+    <div class="max-w-md w-full bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl text-center space-y-4 animate-fade-in">
+        <div class="w-14 h-14 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center text-2xl mx-auto">
+            <i class="fa-solid fa-bolt"></i>
+        </div>
+        <h3 class="text-lg font-bold text-white">Has alcanzado el límite diario</h3>
+        <p id="limit-modal-msg" class="text-xs text-slate-400">
+            Has consumido tus {{ free_limit }} consultas de hoy en el Plan Gratuito. Pasa a TechHelp Pro para continuar con consultas ilimitadas 24/7.
+        </p>
+        <div class="pt-2 flex flex-col gap-2">
+            <a href="{{ url_for('billing.pricing') }}" class="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs shadow-lg shadow-indigo-600/30 transition">
+                ⚡ Desbloquear Plan Pro Ilimitado (19€/mes)
+            </a>
+            <button onclick="document.getElementById('limit-warning-modal').classList.add('hidden')" class="w-full py-2.5 rounded-xl text-slate-400 hover:text-white text-xs font-medium transition">
+                Cerrar por ahora
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}

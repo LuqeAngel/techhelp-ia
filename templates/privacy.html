@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+
+{% block title %}Política de Privacidad | TechHelp IA{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-16 text-slate-300">
+    <h1 class="text-3xl font-extrabold text-white mb-6">Política de Privacidad</h1>
+    <div class="space-y-4 text-sm leading-relaxed">
+        <p>En TechHelp IA nos tomamos en serio la seguridad y privacidad de tu información técnica y datos personales.</p>
+        
+        <h3 class="text-lg font-bold text-white mt-6">1. Datos Recopilados</h3>
+        <p>Recopilamos tu nombre, dirección de correo electrónico y contraseñas cifradas con algoritmos de hashing seguro (PBKDF2/SHA256). Asimismo, almacenamos el historial de incidencias y mensajes intercambiados con la IA para permitirte revisarlos en cualquier momento.</p>
+
+        <h3 class="text-lg font-bold text-white mt-6">2. Procesamiento de Pagos</h3>
+        <p>No almacenamos datos de tarjetas de crédito o números bancarios en nuestros servidores. Toda la información financiera se gestiona directamente en la pasarela segura de Stripe bajo la normativa PCI-DSS Nivel 1.</p>
+
+        <h3 class="text-lg font-bold text-white mt-6">3. Uso de la Información</h3>
+        <p>Tus consultas técnicas se utilizan exclusivamente para generar respuestas diagnósticas y mejorar la calidad del soporte. En ningún caso vendemos tus datos a terceros.</p>
+
+        <h3 class="text-lg font-bold text-white mt-6">4. Contacto</h3>
+        <p>Para solicitar la eliminación de tu cuenta o historial, puedes contactarnos en <strong>soporte@techhelp.ia</strong>.</p>
+    </div>
+</div>
+{% endblock %}

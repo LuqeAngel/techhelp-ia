@@ -1,0 +1,111 @@
+/* TechHelp IA Custom Styles */
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #090d16;
+}
+::-webkit-scrollbar-thumb {
+    background: #1e293b;
+    border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #334155;
+}
+
+/* Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Markdown Content Rendering in Chat */
+.prose-techhelp {
+    color: #e2e8f0;
+    font-size: 0.925rem;
+    line-height: 1.6;
+}
+.prose-techhelp h1, .prose-techhelp h2, .prose-techhelp h3, .prose-techhelp h4 {
+    color: #ffffff;
+    font-weight: 700;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+.prose-techhelp h3 {
+    font-size: 1.1rem;
+    border-bottom: 1px solid #1e293b;
+    padding-bottom: 0.3rem;
+}
+.prose-techhelp p {
+    margin-bottom: 0.75rem;
+}
+.prose-techhelp ul {
+    list-style-type: disc;
+    padding-left: 1.25rem;
+    margin-bottom: 0.75rem;
+}
+.prose-techhelp ol {
+    list-style-type: decimal;
+    padding-left: 1.25rem;
+    margin-bottom: 0.75rem;
+}
+.prose-techhelp li {
+    margin-bottom: 0.25rem;
+}
+.prose-techhelp code:not(pre code) {
+    background-color: #1e293b;
+    color: #38bdf8;
+    padding: 0.15rem 0.4rem;
+    border-radius: 0.375rem;
+    font-size: 0.85em;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+.prose-techhelp pre {
+    background-color: #0f172a !important;
+    border: 1px solid #1e293b;
+    border-radius: 0.5rem;
+    padding: 0.75rem 1rem;
+    overflow-x: auto;
+    margin-top: 0.6rem;
+    margin-bottom: 0.8rem;
+    position: relative;
+}
+.prose-techhelp blockquote {
+    border-left: 3px solid #6366f1;
+    padding-left: 0.75rem;
+    color: #94a3b8;
+    margin: 0.75rem 0;
+    font-style: italic;
+}
+
+/* Copy button for code blocks */
+.copy-code-btn {
+    position: absolute;
+    top: 0.4rem;
+    right: 0.5rem;
+    background: rgba(30, 41, 59, 0.8);
+    border: 1px solid rgba(71, 85, 105, 0.4);
+    color: #94a3b8;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+.copy-code-btn:hover {
+    color: #ffffff;
+    background: #334155;
+}
